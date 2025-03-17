@@ -30,7 +30,7 @@ DEBUG = os.getenv('DEBUG', default=False)
 
 ALLOWED_HOSTS = []
 
-
+USER_AUTH_MODEL = 'users.User'
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,11 +43,11 @@ INSTALLED_APPS = [
 ]
 
 EXTERNAL_APPS = [
-  'core',
-  'users',
-  'artists',
-  'music',
-  'profiles',
+  'app.core',
+  'app.users',
+  'app.artists',
+  'app.musics',
+  'app.profiles',
   'rest_framework',
 
 ]
@@ -134,3 +134,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = "core.User"
