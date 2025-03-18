@@ -1,89 +1,191 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView
-from rest_framework.decorators import action
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import authenticate
 
-from .models import UserProfile, ArtistProfile, Music, MusicArtists  # Adjust import paths as needed
+from .models import UserProfile, ArtistProfile, Music, MusicArtists
 from .serializers import (
-    UserSerializer,
+    LoginSerializer,
     RegisterSerializer,
-    UserProfileSerializer,
     ArtistProfileSerializer,
-    MusicSerializer,
-    MusicArtistsSerializer
 )
 
+from .utils import generate_access_token,generate_refresh_token
 
-class RegisterView(CreateAPIView):
-    """User Registration View."""
-    queryset = get_user_model().objects.all()
-    serializer_class = RegisterSerializer
+
+class LoginView(APIView):
+    """User Login View."""
+
     permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            password = serializer.validated_data["password"]
+
+            user = authenticate(request, email=email, password=password)
+
+            if user is not None:
+                access = generate_access_token(user)
+                refresh = generate_refresh_token(user)
+                return Response(
+                    {
+                        "access": access,
+                        "refresh": refresh,
+                        "user_id": str(user.id),
+                        "email": user.email,
+                        'role':user.role
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"error": "Invalid credentials"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RegisterView(APIView):
+    """User Registration View."""
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    """Viewset for User model (Read-Only)."""
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class UserListView(APIView):
+#     """View for listing users (Read-Only)."""
+
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = UserSerializer
+
+#     def get(self, request):
+#         users = get_user_model().objects.all()
+#         serializer = self.serializer_class(users, many=True)
+#         return Response(serializer.data)
 
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    """Viewset for User Profiles."""
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class UserDetailView(APIView):
+#     """View for retrieving a single user (Read-Only)."""
 
-    def get_queryset(self):
-        """Restrict users to see only their own profile."""
-        return self.queryset.filter(user=self.request.user)
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = UserSerializer
 
-    def perform_create(self, serializer):
-        """Set the user when creating a profile."""
-        serializer.save(user=self.request.user)
+#     def get(self, request, pk):
+#         user = get_object_or_404(get_user_model(), pk=pk)
+#         serializer = self.serializer_class(user)
+#         return Response(serializer.data)
 
 
-class ArtistProfileViewSet(viewsets.ModelViewSet):
-    """Viewset for managing artists."""
-    queryset = ArtistProfile.objects.all()
-    serializer_class = ArtistProfileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+# class UserProfileCreateView(APIView):
+#     """View for creating User Profiles."""
+
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = UserProfileSerializer
+
+#     def post(self, request):
+#         serializer = self.serializer_class(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save(user=request.user)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class MusicViewSet(viewsets.ModelViewSet):
-    """Viewset for managing music."""
-    queryset = Music.objects.all()
-    serializer_class = MusicSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+# class UserProfileListView(APIView):
+#     """View for listing User Profiles."""
 
-    def perform_create(self, serializer):
-        """Custom create method to handle music-artist relationship."""
-        music = serializer.save()
-        artists = self.request.data.get("artists", [])
-        if artists:
-            artist_instances = ArtistProfile.objects.filter(id__in=artists)
-            music.artists.set(artist_instances)
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = UserProfileSerializer
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
-    def add_artist(self, request, pk=None):
-        """Custom action to add an artist to a music record."""
-        music = self.get_object()
-        artist_id = request.data.get("artist_id")
-
-        if not artist_id:
-            return Response({"error": "Artist ID required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            artist = ArtistProfile.objects.get(id=artist_id)
-            music.artists.add(artist)
-            return Response({"message": "Artist added successfully."}, status=status.HTTP_200_OK)
-        except ArtistProfile.DoesNotExist:
-            return Response({"error": "Artist not found."}, status=status.HTTP_404_NOT_FOUND)
+#     def get(self, request):
+#         profiles = UserProfile.objects.filter(user=request.user)
+#         serializer = self.serializer_class(profiles, many=True)
+#         return Response(serializer.data)
 
 
-class MusicArtistsViewSet(viewsets.ModelViewSet):
-    """Viewset for Music-Artist relationships."""
-    queryset = MusicArtists.objects.all()
-    serializer_class = MusicArtistsSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+# class UserProfileDetailView(APIView):
+#     """View for retrieving, updating, or deleting a User Profile."""
+
+#     permission_classes = [permissions.IsAuthenticated]
+#     serializer_class = UserProfileSerializer
+
+#     def get(self, request, pk):
+#         profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
+#         serializer = self.serializer_class(profile)
+#         return Response(serializer.data)
+
+#     def put(self, request, pk):
+#         profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
+#         serializer = self.serializer_class(profile, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def delete(self, request, pk):
+#         profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
+#         profile.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class ArtistProfileCreateView(APIView):
+#     """View for creating Artist Profiles."""
+
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#     serializer_class = ArtistProfileSerializer
+
+#     def post(self, request):
+#         serializer = self.serializer_class(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ArtistProfileListView(APIView):
+#     """View for listing Artist Profiles."""
+
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#     serializer_class = ArtistProfileSerializer
+
+#     def get(self, request):
+#         artists = ArtistProfile.objects.all()
+#         serializer = self.serializer_class(artists, many=True)
+#         return Response(serializer.data)
+
+
+# class ArtistProfileDetailView(APIView):
+#     """View for retrieving, updating, or deleting an Artist Profile."""
+
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#     serializer_class = ArtistProfileSerializer
+
+#     def get(self, request, pk):
+#         artist = get_object_or_404(ArtistProfile, pk=pk)
+#         serializer = self.serializer_class(artist)
+#         return Response(serializer.data)
+
+#     def put(self, request, pk):
+#         artist = get_object_or_404(ArtistProfile, pk=pk)
+#         serializer = self.serializer_class(artist, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def delete(self, request, pk):
+#         artist = get_object_or_404(ArtistProfile, pk=pk)
+#         artist.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)

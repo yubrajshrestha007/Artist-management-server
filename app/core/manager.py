@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
 
         if password:
-            user.set_password(password)  # Uses Django’s built-in method for security
+            user.set_password(password)
         else:
             user.set_unusable_password()  # Ensures the user cannot authenticate without setting a password
 
