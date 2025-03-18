@@ -51,7 +51,7 @@ class UserProfileCreateView(APIView):
 class UserProfileListView(APIView):
     """View for listing User Profiles."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserProfileSerializer
 
     def get(self, request):
