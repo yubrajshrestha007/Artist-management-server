@@ -29,7 +29,7 @@ GENRE_CHOICES = Choices("rnb", "country", "classic", "rock", "jazz", "pop")
 
 def validate_date(value):
     """Ensure date is not in the future."""
-    if value > timezone.now():
+    if value > timezone.now().date(): # change here
         raise ValidationError(_("Date must not be in the future."))
 
 
@@ -71,7 +71,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel, UUIDModel):
 class Profile(UUIDModel, TimeStampedModel):
     """Abstract base profile model."""
 
-    date_of_birth = models.DateTimeField(_("Date of Birth"), null=True, blank=True, validators=[validate_date])
+    date_of_birth = models.DateField(_("Date of Birth"), null=True, blank=True, validators=[validate_date])
     gender = models.CharField(_("Gender"), max_length=10, choices=GENDER_CHOICES, default=GENDER_CHOICES.male)
     address = models.CharField(_("Full Address"), max_length=255, null=True, blank=True)
 
@@ -120,7 +120,7 @@ class Music(UUIDModel, TimeStampedModel):
 
     title = models.CharField(_("Title"), max_length=255)  # Required field
     album_name = models.CharField(_("Album Name"), max_length=255, null=True, blank=True)
-    release_date = models.DateTimeField(_("Release Date"), validators=[validate_date], null=True, blank=True)
+    release_date = models.DateTimeField(_("Release Date"), null=True, blank=True) # change here
     genre = models.CharField(_("Genre"), max_length=20, choices=GENRE_CHOICES, default=GENRE_CHOICES.rnb)
     artists = models.ManyToManyField(ArtistProfile, related_name="musics", through="MusicArtists")
 

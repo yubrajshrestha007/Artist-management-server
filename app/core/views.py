@@ -1,13 +1,11 @@
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate
 
-from .serializers import (
-    LoginSerializer,
-    RegisterSerializer)
+from app.users.services import get_raw_login_queries , get_raw_register_queries # Import connection
 
-from .utils import generate_access_token,generate_refresh_token
+from .serializers import LoginSerializer, RegisterSerializer
+from .utils import generate_access_token, generate_refresh_token
 
 
 class LoginView(APIView):
@@ -22,7 +20,8 @@ class LoginView(APIView):
             email = serializer.validated_data["email"]
             password = serializer.validated_data["password"]
 
-            user = authenticate(request, email=email, password=password)
+            # Use get_raw_login_queries to get the user
+            user = get_raw_login_queries(email, password)
 
             if user is not None:
                 access = generate_access_token(user)
@@ -33,7 +32,7 @@ class LoginView(APIView):
                         "refresh": refresh,
                         "user_id": str(user.id),
                         "email": user.email,
-                        'role':user.role
+                        "role": user.role,
                     },
                     status=status.HTTP_200_OK,
                 )
@@ -45,6 +44,7 @@ class LoginView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RegisterView(APIView):
     """User Registration View."""
 
@@ -54,6 +54,15 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            email = serializer.validated_data["email"]
+            password = serializer.validated_data["password"]
+            role = serializer.validated_data["role"]
+
+            success, errors = get_raw_register_queries(email, password, role)
+
+            if success:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

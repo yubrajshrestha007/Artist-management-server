@@ -6,11 +6,12 @@ from rest_framework.response import Response
 
 
 from app.core.models import ArtistProfile, Music, MusicArtists
+from app.core.permission import IsArtist
 from app.core.serializers import MusicArtistsSerializer, MusicSerializer# Create your views here.
 class MusicCreateView(APIView):
     """View for creating Music records."""
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsArtist]
     serializer_class = MusicSerializer
 
     def post(self, request):
@@ -28,7 +29,7 @@ class MusicCreateView(APIView):
 class MusicListView(APIView):
     """View for listing Music records."""
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsArtist]
     serializer_class = MusicSerializer
 
     def get(self, request):

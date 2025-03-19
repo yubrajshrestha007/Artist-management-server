@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions,status
 from rest_framework.response import Response
 from app.core.models import ArtistProfile
+from app.core.permission import IsArtistManager, IsSuperAdmin
 from app.core.serializers import ArtistProfileSerializer
 
 # Create your views here.
@@ -35,7 +36,7 @@ class ArtistProfileListView(APIView):
 class ArtistProfileDetailView(APIView):
     """View for retrieving, updating, or deleting an Artist Profile."""
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsArtistManager | IsSuperAdmin]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request, pk):

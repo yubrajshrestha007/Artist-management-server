@@ -1,15 +1,25 @@
+# from venv import logger
+from asyncio.log import logger
 from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
-# from rest_framework.decorators import api_view, permission_classes
-from rest_framework import permissions,status
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
+from app.core.models import ArtistProfile, Music, MusicArtists ,User
 
-
-from app.core.models import UserProfile
 from app.core.serializers import UserProfileSerializer, UserSerializer
+from .services import (
+    get_all_raw_user_profiles_queries,
+    get_raw_user_detail_queries,
+    get_raw_user_list_queries,
+    get_raw_user_profile_list_queries,
+    get_raw_user_profile_detail_queries,
+    create_raw_user_profile_queries,
+    update_raw_user_profile_queries,
+    delete_raw_user_profile_queries,
+)
 
-# Create your views here.
+
 class UserListView(APIView):
     """View for listing users (Read-Only)."""
 
@@ -17,7 +27,7 @@ class UserListView(APIView):
     serializer_class = UserSerializer
 
     def get(self, request):
-        users = get_user_model().objects.all()
+        users = get_raw_user_list_queries()
         serializer = self.serializer_class(users, many=True)
         return Response(serializer.data)
 
@@ -29,7 +39,7 @@ class UserDetailView(APIView):
     serializer_class = UserSerializer
 
     def get(self, request, pk):
-        user = get_object_or_404(get_user_model(), pk=pk)
+        user = get_raw_user_detail_queries(pk)
         serializer = self.serializer_class(user)
         return Response(serializer.data)
 
@@ -43,20 +53,32 @@ class UserProfileCreateView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+            try:
+                success, data = create_raw_user_profile_queries(
+                    request.user.id, serializer.validated_data
+                )
+                if success:
+                    return Response(data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(data, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                # Log database errors
+                logger.error(f"Error creating user profile: {e}")
+                return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            # Return serializer errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class UserProfileListView(APIView):
     """View for listing User Profiles."""
 
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserProfileSerializer
 
     def get(self, request):
-        profiles = UserProfile.objects.filter(user=request.user)
-        serializer = self.serializer_class(profiles, many=True)
+        # profile=User.objects.all()
+        profiles = get_raw_user_profile_list_queries(request.user.id)
+        serializer = self.serializer_class(data=profiles, many=True)
+        serializer.is_valid()
         return Response(serializer.data)
 
 
@@ -67,19 +89,41 @@ class UserProfileDetailView(APIView):
     serializer_class = UserProfileSerializer
 
     def get(self, request, pk):
-        profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
-        serializer = self.serializer_class(profile)
-        return Response(serializer.data)
+        profile = get_raw_user_profile_detail_queries(request.user.id, pk)
+        if profile:
+            serializer = self.serializer_class(data=profile)
+            serializer.is_valid()
+            return Response(serializer.data)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):
-        profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
-        serializer = self.serializer_class(profile, data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            success, data = update_raw_user_profile_queries(
+                request.user.id, pk, serializer.validated_data
+            )
+            if success:
+                return Response(data)
+            else:
+                return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        profile = get_object_or_404(UserProfile, pk=pk, user=request.user)
-        profile.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted = delete_raw_user_profile_queries(request.user.id, pk)
+        if deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+class AllUserProfileListView(APIView):
+    """View for listing all User Profiles."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
+
+    def get(self, request):
+        profiles = get_all_raw_user_profiles_queries()
+        serializer = self.serializer_class(data=profiles, many=True)
+        serializer.is_valid()
+        return Response(serializer.data)
