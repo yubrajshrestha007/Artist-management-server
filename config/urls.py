@@ -22,5 +22,6 @@ urlpatterns = [
     path('api/', include('app.core.urls')),
     path('api/', include('app.users.urls')),
     path('api/', include('app.artists.urls')),
+    path('api/', include('app.profiles.urls')),
     path('api/', include('app.musics.urls')),
 ]

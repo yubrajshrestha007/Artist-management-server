@@ -56,18 +56,21 @@ class ArtistProfileSerializer(serializers.Serializer):
     """Serializer for artist profiles."""
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField()
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    gender = serializers.ChoiceField(choices=GENDER_CHOICES, required=False,)
+    address = serializers.CharField(required=False, allow_blank=True)
     first_release_year = serializers.IntegerField(required=False, allow_null=True)
     no_of_albums_released = serializers.IntegerField(default=0)
 
-    def create(self, validated_data):
-        return ArtistProfile.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     return ArtistProfile.objects.create(**validated_data)
 
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.first_release_year = validated_data.get('first_release_year', instance.first_release_year)
-        instance.no_of_albums_released = validated_data.get('no_of_albums_released', instance.no_of_albums_released)
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):
+    #     instance.name = validated_data.get('name', instance.name)
+    #     instance.first_release_year = validated_data.get('first_release_year', instance.first_release_year)
+    #     instance.no_of_albums_released = validated_data.get('no_of_albums_released', instance.no_of_albums_released)
+    #     instance.save()
+    #     return instance
 
 
 class MusicSerializer(serializers.Serializer):

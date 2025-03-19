@@ -70,7 +70,6 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel, UUIDModel):
 
 class Profile(UUIDModel, TimeStampedModel):
     """Abstract base profile model."""
-
     date_of_birth = models.DateField(_("Date of Birth"), null=True, blank=True, validators=[validate_date])
     gender = models.CharField(_("Gender"), max_length=10, choices=GENDER_CHOICES, default=GENDER_CHOICES.male)
     address = models.CharField(_("Full Address"), max_length=255, null=True, blank=True)
@@ -81,7 +80,6 @@ class Profile(UUIDModel, TimeStampedModel):
 
 class UserProfile(Profile):
     """User profile model."""
-
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     first_name = models.CharField(_("First Name"), max_length=255, null=True, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=255, null=True, blank=True)
@@ -98,7 +96,7 @@ class UserProfile(Profile):
 
 class ArtistProfile(Profile):
     """Artist profile model."""
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="artist_profile")
     name = models.CharField(_("Name"), max_length=255)  # Required field
     first_release_year = models.PositiveIntegerField(_("First Release Year"), null=True, blank=True)
     no_of_albums_released = models.PositiveIntegerField(_("Number of Albums Released"), default=0)
