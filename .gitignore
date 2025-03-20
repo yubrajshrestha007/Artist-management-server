@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .env
 db.sqlite3
 .venv
@@ -15,6 +16,8 @@ pip-selfcheck.json
 # static-cdn/  # any collected static files
 
 
+=======
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -37,9 +40,17 @@ parts/
 sdist/
 var/
 wheels/
+<<<<<<< HEAD
 *.egg-info/
 .installed.cfg
 *.egg
+=======
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -54,13 +65,24 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+<<<<<<< HEAD
+=======
+.nox/
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+<<<<<<< HEAD
 .hypothesis/
+=======
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Translations
 *.mo
@@ -69,6 +91,11 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
+<<<<<<< HEAD
+=======
+db.sqlite3
+db.sqlite3-journal
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Flask stuff:
 instance/
@@ -81,16 +108,35 @@ instance/
 docs/_build/
 
 # PyBuilder
+<<<<<<< HEAD
+=======
+.pybuilder/
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
+<<<<<<< HEAD
 # pyenv
 .python-version
 
 # celery beat schedule file
 celerybeat-schedule
+=======
+# IPython
+profile_default/
+ipython_config.py
+
+.pdm.toml
+.pdm-python
+.pdm-build/
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # SageMath parsed files
 *.sage.py
@@ -98,9 +144,17 @@ celerybeat-schedule
 # Environments
 .env
 .venv
+<<<<<<< HEAD
 env/
 venv/
 ENV/
+=======
+myenv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Spyder project settings
 .spyderproject
@@ -114,3 +168,30 @@ ENV/
 
 # mypy
 .mypy_cache/
+<<<<<<< HEAD
+=======
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+
+# Ruff stuff:
+.ruff_cache/
+
+# PyPI configuration file
+.pypirc
+>>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
