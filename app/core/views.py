@@ -1,89 +1,68 @@
-from django.contrib.auth import get_user_model
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView
-from rest_framework.decorators import action
+from rest_framework.views import APIView
 
-from .models import UserProfile, ArtistProfile, Music, MusicArtists  # Adjust import paths as needed
-from .serializers import (
-    UserSerializer,
-    RegisterSerializer,
-    UserProfileSerializer,
-    ArtistProfileSerializer,
-    MusicSerializer,
-    MusicArtistsSerializer
-)
+from app.users.services import get_raw_login_queries , get_raw_register_queries # Import connection
+
+from .serializers import LoginSerializer, RegisterSerializer
+from .utils import generate_access_token, generate_refresh_token
 
 
-class RegisterView(CreateAPIView):
-    """User Registration View."""
-    queryset = get_user_model().objects.all()
-    serializer_class = RegisterSerializer
+class LoginView(APIView):
+    """User Login View."""
+
     permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            password = serializer.validated_data["password"]
+
+            # Use get_raw_login_queries to get the user
+            user = get_raw_login_queries(email, password)
+
+            if user is not None:
+                access = generate_access_token(user)
+                refresh = generate_refresh_token(user)
+                return Response(
+                    {
+                        "access": access,
+                        "refresh": refresh,
+                        "user_id": str(user.id),
+                        "email": user.email,
+                        "role": user.role,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"error": "Invalid credentials"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    """Viewset for User model (Read-Only)."""
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class RegisterView(APIView):
+    """User Registration View."""
 
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    """Viewset for User Profiles."""
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            password = serializer.validated_data["password"]
+            role = serializer.validated_data["role"]
 
-    def get_queryset(self):
-        """Restrict users to see only their own profile."""
-        return self.queryset.filter(user=self.request.user)
+            success, errors = get_raw_register_queries(email, password, role)
 
-    def perform_create(self, serializer):
-        """Set the user when creating a profile."""
-        serializer.save(user=self.request.user)
+            if success:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ArtistProfileViewSet(viewsets.ModelViewSet):
-    """Viewset for managing artists."""
-    queryset = ArtistProfile.objects.all()
-    serializer_class = ArtistProfileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-class MusicViewSet(viewsets.ModelViewSet):
-    """Viewset for managing music."""
-    queryset = Music.objects.all()
-    serializer_class = MusicSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        """Custom create method to handle music-artist relationship."""
-        music = serializer.save()
-        artists = self.request.data.get("artists", [])
-        if artists:
-            artist_instances = ArtistProfile.objects.filter(id__in=artists)
-            music.artists.set(artist_instances)
-
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
-    def add_artist(self, request, pk=None):
-        """Custom action to add an artist to a music record."""
-        music = self.get_object()
-        artist_id = request.data.get("artist_id")
-
-        if not artist_id:
-            return Response({"error": "Artist ID required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            artist = ArtistProfile.objects.get(id=artist_id)
-            music.artists.add(artist)
-            return Response({"message": "Artist added successfully."}, status=status.HTTP_200_OK)
-        except ArtistProfile.DoesNotExist:
-            return Response({"error": "Artist not found."}, status=status.HTTP_404_NOT_FOUND)
-
-
-class MusicArtistsViewSet(viewsets.ModelViewSet):
-    """Viewset for Music-Artist relationships."""
-    queryset = MusicArtists.objects.all()
-    serializer_class = MusicArtistsSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
