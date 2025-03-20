@@ -1,3 +1,5 @@
+# /home/mint/Desktop/ArtistMgntBack/app/core/models.py
+
 """
 Database Models.
 """
@@ -118,9 +120,10 @@ class Music(UUIDModel, TimeStampedModel):
 
     title = models.CharField(_("Title"), max_length=255)  # Required field
     album_name = models.CharField(_("Album Name"), max_length=255, null=True, blank=True)
-    release_date = models.DateTimeField(_("Release Date"), null=True, blank=True) # change here
+    release_date = models.DateTimeField(_("Release Date"), null=True, blank=True)
     genre = models.CharField(_("Genre"), max_length=20, choices=GENRE_CHOICES, default=GENRE_CHOICES.rnb)
-    artists = models.ManyToManyField(ArtistProfile, related_name="musics", through="MusicArtists")
+    created_by = models.ForeignKey(ArtistProfile, on_delete=models.CASCADE, related_name="created_musics", null=True, blank=True)
+    artist = models.ForeignKey(ArtistProfile, on_delete=models.CASCADE, related_name="musics", null=True, blank=True)
 
     class Meta:
         verbose_name = _("Music")
@@ -132,19 +135,3 @@ class Music(UUIDModel, TimeStampedModel):
     def get_absolute_url(self) -> str:
         """Get URL for music detail view."""
         return reverse("music:detail", kwargs={"pk": self.id})
-
-
-class MusicArtists(UUIDModel):
-    """Intermediate model for Music and Artists relationship."""
-
-    music = models.ForeignKey(Music, on_delete=models.CASCADE, related_name="music_artist_relations")
-    artist = models.ForeignKey(ArtistProfile, on_delete=models.CASCADE, related_name="artist_music_relations")
-
-    class Meta:
-        db_table = "core_music_artists"
-        verbose_name = _("Music Artist")
-        verbose_name_plural = _("Music Artists")
-
-    def __str__(self) -> str:
-        """String representation of the relation."""
-        return f"{self.artist.name} - {self.music.title}"

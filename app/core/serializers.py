@@ -1,10 +1,11 @@
+# /home/mint/Desktop/ArtistMgntBack/app/core/serializers.py
+
 from asyncio.log import logger
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from app.core.validator import validate_login_credentials, validate_password_match
-from .models import UserProfile, ArtistProfile, Music, MusicArtists  # Adjust import paths as needed
-from django.contrib.auth import authenticate
+from .models import GENRE_CHOICES, UserProfile, ArtistProfile, Music  # Adjust import paths as needed
 from .models import ROLE_CHOICES,GENDER_CHOICES
 
 
@@ -17,16 +18,6 @@ class UserSerializer(serializers.Serializer):
     date_joined = serializers.DateTimeField(read_only=True)
     role = serializers.ChoiceField(choices=ROLE_CHOICES)
 
-    # def create(self, validated_data):
-    #     return get_user_model().objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.email = validated_data.get('email', instance.email)
-        instance.is_staff = validated_data.get('is_staff', instance.is_staff)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
-        instance.role = validated_data.get('role', instance.role)
-        instance.save()
-        return instance
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -62,15 +53,10 @@ class ArtistProfileSerializer(serializers.Serializer):
     first_release_year = serializers.IntegerField(required=False, allow_null=True)
     no_of_albums_released = serializers.IntegerField(default=0)
 
-    # def create(self, validated_data):
-    #     return ArtistProfile.objects.create(**validated_data)
-
-    # def update(self, instance, validated_data):
-    #     instance.name = validated_data.get('name', instance.name)
-    #     instance.first_release_year = validated_data.get('first_release_year', instance.first_release_year)
-    #     instance.no_of_albums_released = validated_data.get('no_of_albums_released', instance.no_of_albums_released)
-    #     instance.save()
-    #     return instance
+class ArtistProfileNameSerializer(serializers.Serializer):
+    """Serializer for displaying artist name and ID."""
+    id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField()
 
 
 class MusicSerializer(serializers.Serializer):
@@ -79,39 +65,21 @@ class MusicSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     title = serializers.CharField()
     album_name = serializers.CharField(required=False, allow_blank=True)
-    release_date = serializers.DateField(required=False, allow_null=True)
-    genre = serializers.CharField()
-    artists = ArtistProfileSerializer(many=True, read_only=True)
+    release_date = serializers.DateTimeField(required=False, allow_null=True)
+    genre = serializers.ChoiceField(choices=GENRE_CHOICES, required=False)
+    artist_info = serializers.SerializerMethodField()
 
-    def create(self, validated_data):
-        """Override create method to handle many-to-many relationship."""
-        music = Music.objects.create(**validated_data)
-        return music
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.album_name = validated_data.get('album_name', instance.album_name)
-        instance.release_date = validated_data.get('release_date', instance.release_date)
-        instance.genre = validated_data.get('genre', instance.genre)
-        instance.save()
-        return instance
-
-
-class MusicArtistsSerializer(serializers.Serializer):
-    """Serializer for music-artist relationship."""
-
-    id = serializers.UUIDField(read_only=True)
-    music = MusicSerializer(read_only=True)
-    artistProfile = ArtistProfileSerializer(read_only=True)
-
-    def create(self, validated_data):
-        return MusicArtists.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.music = validated_data.get('music', instance.music)
-        instance.artist = validated_data.get('artistProfile', instance.artist)
-        instance.save()
-        return instance
+    def get_artist_info(self, obj):
+        """Get artist information."""
+        created_by_id = obj.get("created_by_id")
+        if created_by_id:
+            try:
+                artist = ArtistProfile.objects.get(id=created_by_id)
+                serializer = ArtistProfileNameSerializer(artist)
+                return serializer.data
+            except ArtistProfile.DoesNotExist:
+                return None
+        return None
 
 
 class LoginSerializer(serializers.Serializer):

@@ -1,52 +1,41 @@
+# /home/mint/Desktop/ArtistMgntBack/app/core/permission.py
+
 from rest_framework import permissions
-from .models import ROLE_CHOICES
+from .models import ArtistProfile
 
-
-class IsSuperAdmin(permissions.BasePermission):
-    """Allows access only to super admins."""
+class IsArtist(permissions.BasePermission):
+    """Check if the user is an artist."""
 
     def has_permission(self, request, view):
-        return request.user and request.user.role == ROLE_CHOICES.super_admin
-
+        return request.user.role == "artist"
 
 
 class IsArtistManager(permissions.BasePermission):
-    """Allows access only to artist managers."""
+    """Check if the user is an artist manager."""
 
     def has_permission(self, request, view):
-        return request.user and request.user.role == ROLE_CHOICES.artist_manager
+        return request.user.role == "artist_manager"
 
 
-class IsArtist(permissions.BasePermission):
-    """Allows access only to artists."""
+class IsSuperAdmin(permissions.BasePermission):
+    """Check if the user is a super admin."""
 
     def has_permission(self, request, view):
-        return request.user and request.user.role == ROLE_CHOICES.artist
+        return request.user.role == "super_admin"
 
+class IsMusicCreator(permissions.BasePermission):
+    """
+    Allows access only to the artist who created the music record.
+    """
 
-# class IsSuperAdminOrArtistManager(permissions.BasePermission):
-#     """Allows access to super admins and artist managers."""
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-#     def has_permission(self, request, view):
-#         return request.user and request.user.role in [
-#             ROLE_CHOICES.super_admin,
-#             ROLE_CHOICES.artist_manager,
-#         ]
-
-
-# class IsArtistOrReadOnly(permissions.BasePermission):
-#     """Allows artists to modify, others read-only."""
-
-#     def has_permission(self, request, view):
-#         return request.method in permissions.SAFE_METHODS or (
-#             request.user and request.user.role == ROLE_CHOICES.artist
-#         )
-
-
-# class IsSuperAdminOrReadOnly(permissions.BasePermission):
-#     """Allows super admins to modify, others read-only."""
-
-#     def has_permission(self, request, view):
-#         return request.method in permissions.SAFE_METHODS or (
-#             request.user and request.user.role == ROLE_CHOICES.super_admin
-#         )
+        if request.user.role == "artist":
+            try:
+                artist_profile = ArtistProfile.objects.get(user=request.user)
+                return obj.created_by == artist_profile
+            except ArtistProfile.DoesNotExist:
+                return False
+        return False
