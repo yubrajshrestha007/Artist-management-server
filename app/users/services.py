@@ -89,7 +89,8 @@ def get_raw_user_list_queries():
     with connection.cursor() as cursor:
         query = f"""
             SELECT id, email, is_staff, is_active, date_joined, role
-            FROM {get_user_model()._meta.db_table};
+            FROM {get_user_model()._meta.db_table}
+            WHERE role!='super_admin';
         """
         cursor.execute(query)
         columns = [col[0] for col in cursor.description]
