@@ -7,21 +7,21 @@ class IsArtist(permissions.BasePermission):
     """Check if the user is an artist."""
 
     def has_permission(self, request, view):
-        return request.user.role == "artist"
+        return request.user.is_authenticated and request.user.role == "artist"
 
 
 class IsArtistManager(permissions.BasePermission):
     """Check if the user is an artist manager."""
 
     def has_permission(self, request, view):
-        return request.user.role == "artist_manager"
+        return request.user.is_authenticated and request.user.role == "artist_manager"
 
 
 class IsSuperAdmin(permissions.BasePermission):
     """Check if the user is a super admin."""
 
     def has_permission(self, request, view):
-        return request.user.role == "super_admin"
+        return request.user.is_authenticated and request.user.role == "super_admin"
 
 class IsMusicCreator(permissions.BasePermission):
     """
@@ -32,7 +32,7 @@ class IsMusicCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if request.user.role == "artist":
+        if request.user.is_authenticated and request.user.role == "artist":
             try:
                 artist_profile = ArtistProfile.objects.get(user=request.user)
                 return obj.created_by == artist_profile

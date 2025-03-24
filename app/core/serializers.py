@@ -58,6 +58,16 @@ class ArtistProfileNameSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField()
 
+class ManagerProfileSerializer(serializers.Serializer):
+    """Serializer for manager profiles."""
+    id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField()
+    company_name = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)  # Make email optional
+    phone = serializers.CharField(required=False, allow_blank=True)  # Make phone optional
+    gender = serializers.ChoiceField(choices=GENDER_CHOICES, required=False)
+    address = serializers.CharField(required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
 
 class MusicSerializer(serializers.Serializer):
     """Serializer for music records."""

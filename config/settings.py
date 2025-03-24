@@ -103,6 +103,12 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT'),
     }
 }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'app.core.authentication.JWTAuthentication',
+    ],
+}
+
 
 
 # Password validation

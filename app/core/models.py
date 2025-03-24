@@ -1,4 +1,3 @@
-# /home/mint/Desktop/ArtistMgntBack/app/core/models.py
 
 """
 Database Models.
@@ -96,12 +95,30 @@ class UserProfile(Profile):
         return f"{self.first_name} {self.last_name}".strip() if self.first_name else f"Profile of {self.user.email}"
 
 
+class ManagerProfile(Profile):
+    """Manager profile model."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="manager_profile")
+    name = models.CharField(_("Name"), max_length=255)  # Required field
+    company_name = models.CharField(_("Company Name"), max_length=255, null=True, blank=True)
+    company_email = models.EmailField(_("Company Email"), null=True, blank=True)
+    company_phone = models.CharField(_("Company Phone"), max_length=15, null=True, blank=True)  # Make sure this is present.
+    class Meta:
+        verbose_name = _("Manager Profile")
+
+    def __str__(self) -> str:
+        """String representation of the manager."""
+        return self.name
+
+# ==============================
+
 class ArtistProfile(Profile):
     """Artist profile model."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="artist_profile")
+    manager_id= models.ForeignKey(ManagerProfile, on_delete=models.CASCADE, related_name="artists", null=True, blank=True)
     name = models.CharField(_("Name"), max_length=255)  # Required field
     first_release_year = models.PositiveIntegerField(_("First Release Year"), null=True, blank=True)
     no_of_albums_released = models.PositiveIntegerField(_("Number of Albums Released"), default=0)
+
 
     class Meta:
         verbose_name = _("Artist Profile")

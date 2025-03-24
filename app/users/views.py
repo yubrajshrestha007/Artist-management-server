@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status
 from rest_framework.response import Response
 
+from app.core.permission import IsArtistManager, IsSuperAdmin
 from app.core.serializers import UserSerializer, RegisterSerializer
 from .services import (
     get_raw_user_detail_queries,
@@ -14,7 +15,7 @@ from .services import (
 class UserListView(APIView):
     """View for listing and creating users."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsSuperAdmin | IsArtistManager]
     serializer_class = UserSerializer
 
     def get(self, request):
