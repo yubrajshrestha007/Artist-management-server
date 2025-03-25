@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from app.core.models import ArtistProfile
-from app.core.permission import IsArtistManager, IsSuperAdmin
+from app.core.permission import IsArtist, IsArtistManager, IsSuperAdmin
 from app.core.serializers import ArtistProfileSerializer
 from .services import (
     get_raw_artist_profile_list_queries,
@@ -17,7 +17,7 @@ from .services import (
 class ArtistProfileCreateView(APIView):
     """View for creating Artist Profiles."""
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsArtist]
     serializer_class = ArtistProfileSerializer
 
     def post(self,request):
@@ -33,7 +33,7 @@ class ArtistProfileCreateView(APIView):
 class ArtistProfileListView(APIView):
     """View for listing Artist Profiles."""
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsArtist]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request):
@@ -44,7 +44,7 @@ class ArtistProfileListView(APIView):
 class ArtistProfileDetailView(APIView):
     """View for retrieving, updating, or deleting an Artist Profile."""
 
-    permission_classes = [IsArtistManager | IsSuperAdmin]
+    permission_classes = [ IsSuperAdmin]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request, pk):

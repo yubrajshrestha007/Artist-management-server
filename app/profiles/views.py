@@ -1,8 +1,11 @@
+# /home/mint/Desktop/ArtistMgntBack/app/profiles/views.py
 from asyncio.log import logger
 from rest_framework.views import APIView
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import permissions, status
 from rest_framework.response import Response
 
+from app.core.models import User
 from app.core.serializers import UserProfileSerializer, ManagerProfileSerializer
 from .service import (
     create_raw_manager_profile_queries,
@@ -17,6 +20,7 @@ from .service import (
     get_raw_manager_profile_detail_queries,
     update_raw_manager_profile_queries,
     delete_raw_manager_profile_queries,
+    get_manager_profile_by_user_id_direct,
 )
 
 
@@ -109,7 +113,7 @@ class AllUserProfileListView(APIView):
 class ManagerProfileCreateView(APIView):
     """View for creating a new Manager Profile."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ManagerProfileSerializer
 
     def post(self, request):
@@ -142,9 +146,8 @@ class ManagerProfileListView(APIView):
 class ManagerProfileDetailView(APIView):
     """View for retrieving, updating, or deleting a Manager Profile."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ManagerProfileSerializer
-
     def get(self, request, pk):
         profile = get_raw_manager_profile_detail_queries(request.user.id, pk)
         if profile:
@@ -183,3 +186,38 @@ class AllManagerProfileListView(APIView):
         serializer = self.serializer_class(data=profiles, many=True)
         serializer.is_valid()
         return Response(serializer.data)
+
+
+class ManagerProfileByUserView(APIView):
+    """View for retrieving a Manager Profile by User ID."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ManagerProfileSerializer
+
+    def get(self, request, user_id):
+        """
+        Retrieves the ManagerProfile associated with a given user_id.
+
+        Args:
+            request: The HTTP request object.
+            user_id: The ID of the User.
+
+        Returns:
+            A Response object containing the serialized ManagerProfile data or an error response.
+        """
+        try:
+            manager_profile = get_manager_profile_by_user_id_direct(user_id)
+            if manager_profile:
+                serializer = self.serializer_class(manager_profile)
+                data = serializer.data
+                data['manager_id'] = str(manager_profile.id) # Add manager_id to the response
+                return Response(data)
+            else:
+                return Response({"error": f"ManagerProfile not found for user with ID {user_id}."}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response({"error": f"User with ID {user_id} not found."}, status=status.HTTP_404_NOT_FOUND)
+        except ObjectDoesNotExist:
+            return Response({"error": f"ManagerProfile not found for user with ID {user_id}."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error retrieving manager profile by user ID: {e}")
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,8 +1,13 @@
 import datetime
 from django.db import connection
+from django.core.exceptions import ObjectDoesNotExist
 import uuid
 import datetime
 from django.db import IntegrityError
+from django.utils import timezone
+
+from app.core.models import ManagerProfile
+
 
 def get_all_raw_user_profiles_queries():
     """
@@ -23,6 +28,7 @@ def get_all_raw_user_profiles_queries():
         profiles = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     return profiles
+
 
 def get_raw_user_profile_list_queries(user_id):
     """
@@ -75,7 +81,6 @@ def get_raw_user_profile_detail_queries(user_id, profile_id):
         return None
 
 
-
 def create_raw_user_profile_queries(user_id, data):
     """
     Creates a new user profile using raw SQL.
@@ -117,6 +122,8 @@ def create_raw_user_profile_queries(user_id, data):
             return False, {"error": "An error occurred during profile creation."}
         except Exception as e:
             return False, {"error": "An error occurred during profile creation."}
+
+
 def update_raw_user_profile_queries(user_id, profile_id, data):
     """
     Updates an existing user profile using raw SQL.
@@ -181,11 +188,10 @@ def delete_raw_user_profile_queries(user_id, profile_id):
         return cursor.rowcount > 0
 
 
-
-
 import uuid
 from django.db import connection, IntegrityError
 from django.utils import timezone
+
 
 def get_all_raw_manager_profiles_queries():
     """
@@ -203,6 +209,7 @@ def get_all_raw_manager_profiles_queries():
         columns = [col[0] for col in cursor.description]
         profiles = [dict(zip(columns, row)) for row in cursor.fetchall()]
     return profiles
+
 
 def get_raw_manager_profile_list_queries(user_id):
     """
@@ -278,8 +285,8 @@ def create_raw_manager_profile_queries(user_id, data):
             user_id,
             data.get("name"),
             data.get("company_name"),
-            data.get("email"), # use email
-            data.get("phone"), # use phone
+            data.get("company_email"),  # use company_email
+            data.get("company_phone"),  # use company_phone
             data.get("gender"),
             date_of_birth,
             data.get("address"),
@@ -321,8 +328,8 @@ def update_raw_manager_profile_queries(user_id, profile_id, data):
         params = (
             data.get("name"),
             data.get("company_name"),
-            data.get("email"),
-            data.get("phone"),
+            data.get("company_email"),
+            data.get("company_phone"),
             data.get("gender"),
             date_of_birth,
             data.get("address"),
@@ -357,3 +364,21 @@ def delete_raw_manager_profile_queries(user_id, profile_id):
         """
         cursor.execute(delete_query, (user_id, profile_id))
         return cursor.rowcount > 0
+
+
+def get_manager_profile_by_user_id_direct(user_id):
+    """
+    Retrieves the ManagerProfile associated with a given user_id by directly querying ManagerProfile.
+
+    Args:
+        user_id: The ID of the User.
+
+    Returns:
+        The ManagerProfile object if found, otherwise None.
+    """
+    try:
+        manager_profile = ManagerProfile.objects.get(user_id=user_id)
+        return manager_profile
+    except ObjectDoesNotExist:
+        print(f"ManagerProfile does not exist for user with ID {user_id}.")
+        return None

@@ -39,7 +39,7 @@ def create_raw_artist_profile_queries(user_id, data):
     """Creates a new artist profile using raw SQL."""
     try:
         User.objects.get(id=user_id)  # Check if the user exists
-    except User.DoesNotExist:
+    except (User.DoesNotExist, ValueError):  # Handle both DoesNotExist and invalid UUID format
         return False, {"error": "User does not exist."}
 
     with connection.cursor() as cursor:
@@ -55,7 +55,7 @@ def create_raw_artist_profile_queries(user_id, data):
             date_of_birth = None
         params = (
             artist_id,
-            user_id,
+            user_id,  # Use the UUID object here
             data.get("name"),
             date_of_birth,
             data.get("gender"),

@@ -1,4 +1,3 @@
-# /home/mint/Desktop/ArtistMgntBack/app/core/authentication.py
 
 from django.contrib.auth import get_user_model
 from rest_framework import authentication, exceptions
