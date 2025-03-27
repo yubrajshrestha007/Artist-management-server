@@ -81,7 +81,10 @@ class UserDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        deleted = delete_raw_user_queries(pk)
-        if deleted:
+        success, data = delete_raw_user_queries(pk)
+        if success:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        elif "error" in data and data["error"] == "User not found.":
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

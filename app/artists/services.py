@@ -4,6 +4,7 @@ from app.core.models import ArtistProfile, User  # Import User
 import uuid
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 
 def get_raw_artist_profile_list_queries():
@@ -114,3 +115,25 @@ def delete_raw_artist_profile_queries(artist_id):
         """
         cursor.execute(delete_query, (artist_id,))
         return cursor.rowcount > 0
+
+
+def get_raw_artist_profile_by_user_id_queries(user_id):
+    """Retrieves an artist profile by user ID using raw SQL."""
+    try:
+        User.objects.get(id=user_id)
+    except (User.DoesNotExist, ValueError):
+        raise Http404("User does not exist.")
+
+    with connection.cursor() as cursor:
+        query = f"""
+            SELECT id, name, date_of_birth, gender, address, first_release_year, no_of_albums_released, user_id, created, modified
+            FROM {ArtistProfile._meta.db_table}
+            WHERE user_id = %s;
+        """
+        cursor.execute(query, (user_id,))
+        columns = [col[0] for col in cursor.description]
+        artist = cursor.fetchone()
+        if artist:
+            return dict(zip(columns, artist))
+        else:
+            raise Http404("Artist profile not found for this user.")

@@ -1,3 +1,6 @@
+from django.db import connection, IntegrityError, transaction, DatabaseError
+from django.contrib.auth import get_user_model
+from app.core.models import UserProfile, ArtistProfile, ManagerProfile  # Import related models
 import datetime
 from django.db import connection
 from django.contrib.auth import get_user_model
@@ -6,6 +9,10 @@ from django.utils import timezone
 import datetime
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import IntegrityError
+from django.db import connection, IntegrityError, DatabaseError
+from django.contrib.auth import get_user_model
+from django.db import transaction
+
 
 
 def get_raw_login_queries(email, password):
@@ -143,12 +150,72 @@ def update_raw_user_queries(user_id, data):
         except IntegrityError as e:
             return False, {"error": "An error occurred during user update."}
 
+
+from django.db import connection, IntegrityError, transaction, DatabaseError
+from django.contrib.auth import get_user_model
+from app.core.models import ArtistProfile, ManagerProfile  # Import related models
+
+from django.db import connection, IntegrityError, transaction, DatabaseError
+from django.contrib.auth import get_user_model
+from django.contrib.admin.models import LogEntry
+from app.core.models import UserProfile, ArtistProfile, ManagerProfile  # Import related models
+
 def delete_raw_user_queries(user_id):
-    """Deletes a user using raw SQL."""
-    with connection.cursor() as cursor:
-        delete_query = f"""
-            DELETE FROM {get_user_model()._meta.db_table}
-            WHERE id = %s;
-        """
-        cursor.execute(delete_query, (user_id,))
-        return cursor.rowcount > 0
+    """Deletes a user and their related records using raw SQL."""
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # 1. Check if the user exists
+                user_exists_query = f"""
+                    SELECT 1 FROM {get_user_model()._meta.db_table}
+                    WHERE id = %s;
+                """
+                cursor.execute(user_exists_query, (user_id,))
+                if not cursor.fetchone():
+                    return False, {"error": "User not found."}
+
+                # 2. Delete related django_admin_log records
+                delete_admin_log_query = f"""
+                    DELETE FROM {LogEntry._meta.db_table}
+                    WHERE user_id = %s;
+                """
+                cursor.execute(delete_admin_log_query, (user_id,))
+
+                # 3. Delete related UserProfile records
+                delete_user_profile_query = f"""
+                    DELETE FROM {UserProfile._meta.db_table}
+                    WHERE user_id = %s;
+                """
+                cursor.execute(delete_user_profile_query, (user_id,))
+
+                # 4. Delete related ArtistProfile records
+                delete_artist_profile_query = f"""
+                    DELETE FROM {ArtistProfile._meta.db_table}
+                    WHERE user_id = %s;
+                """
+                cursor.execute(delete_artist_profile_query, (user_id,))
+
+                # 5. Delete related ManagerProfile records
+                delete_manager_profile_query = f"""
+                    DELETE FROM {ManagerProfile._meta.db_table}
+                    WHERE user_id = %s;
+                """
+                cursor.execute(delete_manager_profile_query, (user_id,))
+
+                # 6. Delete the user
+                delete_user_query = f"""
+                    DELETE FROM {get_user_model()._meta.db_table}
+                    WHERE id = %s;
+                """
+                cursor.execute(delete_user_query, (user_id,))
+
+                # Check if the user was actually deleted
+                if cursor.rowcount > 0:
+                    return True, {}  # Deletion successful
+                else:
+                    return False, {"error": "User not found."}
+
+    except (IntegrityError, DatabaseError) as e:
+        return False, {"error": "An error occurred during user deletion.", "detail": str(e)}
+    except Exception as e:
+        return False, {"error": "An unexpected error occurred.", "detail": str(e)}
