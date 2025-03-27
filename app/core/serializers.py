@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from app.core.validator import validate_login_credentials, validate_password_match
-from .models import GENRE_CHOICES, UserProfile, ArtistProfile, Music  # Adjust import paths as needed
+from .models import GENRE_CHOICES, UserProfile, ArtistProfile, Music, ManagerProfile  # Adjust import paths as needed
 from .models import ROLE_CHOICES,GENDER_CHOICES
 
 
@@ -25,8 +25,8 @@ class RegisterSerializer(serializers.Serializer):
 
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
-    confirm_password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
+    password = serializers.CharField(write_only=True, required=False, min_length=8, style={"input_type": "password"})
+    confirm_password = serializers.CharField(write_only=True,required=False, min_length=8, style={"input_type": "password"})
     role = serializers.ChoiceField(choices=ROLE_CHOICES)
 
     def validate(self, attrs):
@@ -52,12 +52,34 @@ class ArtistProfileSerializer(serializers.Serializer):
     address = serializers.CharField(required=False, allow_blank=True)
     first_release_year = serializers.IntegerField(required=False, allow_null=True)
     no_of_albums_released = serializers.IntegerField(default=0)
+    manager_id = serializers.PrimaryKeyRelatedField(
+        queryset=ManagerProfile.objects.all(),
+        required=False,
+        allow_null=True,
+        source='manager'
+    )
 
 class ArtistProfileNameSerializer(serializers.Serializer):
     """Serializer for displaying artist name and ID."""
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField()
 
+class ManagerProfileSerializer(serializers.Serializer):
+    """Serializer for manager profiles."""
+    id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField()
+    company_name = serializers.CharField(required=False, allow_blank=True)
+    company_email = serializers.EmailField(required=False, allow_blank=True)  # Make email optional
+    company_phone = serializers.CharField(required=False, allow_blank=True)  # Make phone optional
+    gender = serializers.ChoiceField(choices=GENDER_CHOICES, required=False)
+    address = serializers.CharField(required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(),
+        required=False,
+        allow_null=True,
+        source='user'
+    )
 
 class MusicSerializer(serializers.Serializer):
     """Serializer for music records."""
@@ -68,6 +90,18 @@ class MusicSerializer(serializers.Serializer):
     release_date = serializers.DateTimeField(required=False, allow_null=True)
     genre = serializers.ChoiceField(choices=GENRE_CHOICES, required=False)
     artist_info = serializers.SerializerMethodField()
+    created_by_id = serializers.PrimaryKeyRelatedField(
+        queryset=ArtistProfile.objects.all(),
+        required=False,
+        allow_null=True,
+        source='created_by'
+    )
+    artist_id = serializers.PrimaryKeyRelatedField(
+        queryset=ArtistProfile.objects.all(),
+        required=False,
+        allow_null=True,
+        source='artist'
+    )
 
     def get_artist_info(self, obj):
         """Get artist information."""

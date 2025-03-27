@@ -24,6 +24,7 @@ class LoginView(APIView):
             user = get_raw_login_queries(email, password)
 
             if user is not None:
+                request.user=user
                 access = generate_access_token(user)
                 refresh = generate_refresh_token(user)
                 return Response(

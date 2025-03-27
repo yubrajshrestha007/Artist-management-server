@@ -19,7 +19,7 @@ from .services import (
 class MusicCreateView(APIView):
     """View for creating Music records."""
 
-    permission_classes = [IsArtist | IsSuperAdmin]
+    permission_classes = [IsArtist]
     serializer_class = MusicSerializer
 
     def post(self, request):
@@ -42,7 +42,7 @@ class MusicCreateView(APIView):
 class MusicListView(APIView):
     """View for listing Music records."""
 
-    permission_classes = [IsArtist | IsSuperAdmin]
+    permission_classes = [IsArtist]
     serializer_class = MusicSerializer
 
     def get(self, request):
