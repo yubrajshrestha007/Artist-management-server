@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .env
 db.sqlite3
 .venv
@@ -16,8 +15,6 @@ pip-selfcheck.json
 # static-cdn/  # any collected static files
 
 
-=======
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -40,17 +37,14 @@ parts/
 sdist/
 var/
 wheels/
-<<<<<<< HEAD
 *.egg-info/
 .installed.cfg
 *.egg
-=======
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -65,24 +59,18 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-<<<<<<< HEAD
-=======
 .nox/
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-<<<<<<< HEAD
 .hypothesis/
-=======
 *.py,cover
 .hypothesis/
 .pytest_cache/
 cover/
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Translations
 *.mo
@@ -91,11 +79,8 @@ cover/
 # Django stuff:
 *.log
 local_settings.py
-<<<<<<< HEAD
-=======
 db.sqlite3
 db.sqlite3-journal
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Flask stuff:
 instance/
@@ -108,22 +93,17 @@ instance/
 docs/_build/
 
 # PyBuilder
-<<<<<<< HEAD
-=======
 .pybuilder/
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-<<<<<<< HEAD
 # pyenv
 .python-version
 
 # celery beat schedule file
 celerybeat-schedule
-=======
 # IPython
 profile_default/
 ipython_config.py
@@ -136,7 +116,6 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # SageMath parsed files
 *.sage.py
@@ -144,17 +123,14 @@ celerybeat.pid
 # Environments
 .env
 .venv
-<<<<<<< HEAD
 env/
 venv/
 ENV/
-=======
 myenv/
 venv/
 ENV/
 env.bak/
 venv.bak/
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
 
 # Spyder project settings
 .spyderproject
@@ -168,8 +144,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-<<<<<<< HEAD
-=======
 .dmypy.json
 dmypy.json
 
@@ -194,4 +168,3 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
->>>>>>> f5ccc14f76f7eb489f75ce0fd11ba21741d5074f
