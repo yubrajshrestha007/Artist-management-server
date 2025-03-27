@@ -9,11 +9,21 @@ from django.db import IntegrityError
 
 
 def get_raw_login_queries(email, password):
+    """
+    Retrieves a user from the database by email and verifies the password using raw SQL.
+
+    Args:
+        email (str): The user's email.
+        password (str): The user's password.
+
+    Returns:
+        User or None: The User object if the credentials are valid, None otherwise.
+    """
     queries = []
     user = None  # Initialize user to None
     with connection.cursor() as cursor:
         user_query = f"""
-            SELECT id, password, email, role FROM {get_user_model()._meta.db_table}
+            SELECT id, password, email, role, is_staff, is_active, is_superuser FROM {get_user_model()._meta.db_table}
             WHERE email = %s;
         """
         queries.append(user_query)
@@ -21,11 +31,12 @@ def get_raw_login_queries(email, password):
         user_data = cursor.fetchone()
 
         if user_data:
-            user_id, hashed_password, user_email, user_role = user_data
+            user_id, hashed_password, user_email, user_role, is_staff, is_active, is_superuser = user_data
             if check_password(password, hashed_password):
                 # Password is correct, create a user object
                 User = get_user_model()
-                user = User(id=user_id, email=user_email, role=user_role)
+                user = User(id=user_id, email=user_email, role=user_role, is_staff=is_staff, is_active=is_active, is_superuser=is_superuser)
+                user.password = hashed_password
             else:
                 user = None
         else:
@@ -89,7 +100,8 @@ def get_raw_user_list_queries():
     with connection.cursor() as cursor:
         query = f"""
             SELECT id, email, is_staff, is_active, date_joined, role
-            FROM {get_user_model()._meta.db_table};
+            FROM {get_user_model()._meta.db_table}
+            WHERE role!='super_admin';
         """
         cursor.execute(query)
         columns = [col[0] for col in cursor.description]

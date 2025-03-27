@@ -8,7 +8,8 @@ from .views import (
 app_name = "artists"
 
 urlpatterns = [
-    path("artists/", ArtistProfileCreateView.as_view(), name="artist-create"),
+    path("artists/", ArtistProfileCreateView.as_view(), name="artist"),
+
     path("artists/list/", ArtistProfileListView.as_view(), name="artist-list"),
     path(
         "artists/<uuid:pk>/",
