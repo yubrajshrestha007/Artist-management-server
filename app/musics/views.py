@@ -3,6 +3,7 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
 from app.core.models import ArtistProfile, Music
 from app.core.permission import IsArtist, IsSuperAdmin, IsMusicCreator
@@ -19,7 +20,7 @@ from .services import (
 class MusicCreateView(APIView):
     """View for creating Music records."""
 
-    permission_classes = [IsArtist]
+    permission_classes = [IsArtist]  # Only authenticated users can create music
     serializer_class = MusicSerializer
 
     def post(self, request):
@@ -28,8 +29,9 @@ class MusicCreateView(APIView):
             try:
                 if request.user.role != "artist":
                     return Response({"error": "Only artists can create music."}, status=status.HTTP_403_FORBIDDEN)
+
                 artist_profile = ArtistProfile.objects.get(user=request.user)
-                success, data = create_raw_music_queries(serializer.validated_data, artist_profile.id)
+                success, data = create_raw_music_queries(serializer.validated_data, request.user.id) #pass the user_id
                 if success:
                     return Response(data, status=status.HTTP_201_CREATED)
                 else:
@@ -42,7 +44,7 @@ class MusicCreateView(APIView):
 class MusicListView(APIView):
     """View for listing Music records."""
 
-    permission_classes = [IsArtist]
+    permission_classes = [IsArtist] # Only authenticated users can list music
     serializer_class = MusicSerializer
 
     def get(self, request):
@@ -53,7 +55,7 @@ class MusicListView(APIView):
 class MusicDetailView(APIView):
     """View for retrieving, updating, or deleting a Music record."""
 
-    permission_classes = [IsMusicCreator]
+    permission_classes = [IsMusicCreator] # Only authenticated users can access music detail
     serializer_class = MusicSerializer
 
     def get(self, request, pk):
@@ -70,18 +72,19 @@ class MusicDetailView(APIView):
         # Check if the user has permission to edit the music
         try:
             music_object = Music.objects.get(id=pk)
-            self.check_object_permissions(request, music_object)
-        except Music.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            # self.check_object_permissions(request, music_object) # we dont need this anymore because we are checking in the service
 
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            success, data = update_raw_music_queries(pk, serializer.validated_data)
+            success, data = update_raw_music_queries(pk, request.data, request.user.id) #pass the user_id
             if success:
                 return Response(data)
             else:
                 return Response(data, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Music.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"error": "An error occurred during music update."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk):
         music = get_raw_music_detail_queries(pk)
@@ -91,11 +94,15 @@ class MusicDetailView(APIView):
         # Check if the user has permission to delete the music
         try:
             music_object = Music.objects.get(id=pk)
-            self.check_object_permissions(request, music_object)
+            # self.check_object_permissions(request, music_object) # we dont need this anymore because we are checking in the service
+            deleted = delete_raw_music_queries(pk, request.user.id) #pass the user_id
+            if deleted:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"error": "You are not authorized to delete this music record."}, status=status.HTTP_403_FORBIDDEN)
         except Music.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        deleted = delete_raw_music_queries(pk)
-        if deleted:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"error": "An error occurred during music delete."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -24,7 +24,7 @@ def get_raw_artist_profile_detail_queries(artist_id):
     """Retrieves a single artist profile by ID using raw SQL."""
     with connection.cursor() as cursor:
         query = f"""
-            SELECT id, name, date_of_birth, gender, address, first_release_year, no_of_albums_released, manager_id, created, modified
+            SELECT id, name, date_of_birth, gender, address, first_release_year, no_of_albums_released, manager_id_id, created, modified
             FROM {ArtistProfile._meta.db_table}
             WHERE id = %s;
         """
