@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 class ArtistProfileCreateView(APIView):
     """View for creating Artist Profiles."""
 
-    permission_classes = [IsArtist]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ArtistProfileSerializer
 
     def post(self, request):
@@ -39,7 +39,7 @@ class ArtistProfileCreateView(APIView):
 class ArtistProfileListView(APIView):
     """View for listing Artist Profiles."""
 
-    permission_classes = [IsArtist]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request):
@@ -50,7 +50,7 @@ class ArtistProfileListView(APIView):
 class ArtistProfileDetailView(APIView):
     """View for retrieving, updating, or deleting an Artist Profile."""
 
-    permission_classes = [IsArtist]
+    permission_classes = [IsArtist| IsArtistManager|IsSuperAdmin | permissions.AllowAny]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request, pk):
@@ -81,14 +81,13 @@ class ArtistProfileDetailView(APIView):
 class ArtistProfileByUserView(APIView):
     """View for retrieving an Artist Profile by User ID."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ArtistProfileSerializer
 
     def get(self, request, user_id):
         try:
             artist_profile = get_raw_artist_profile_by_user_id_queries(user_id)
-            serializer = self.serializer_class(artist_profile)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(artist_profile, status=status.HTTP_200_OK)
         except Http404 as e:
             return Response({"detail": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
