@@ -133,7 +133,7 @@ class ManagerProfileCreateView(APIView):
 class ManagerProfileListView(APIView):
     """View for listing Manager Profiles."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ManagerProfileSerializer
 
     def get(self, request):
@@ -178,7 +178,7 @@ class ManagerProfileDetailView(APIView):
 class AllManagerProfileListView(APIView):
     """View for listing all Manager Profiles."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = ManagerProfileSerializer
 
     def get(self, request):
