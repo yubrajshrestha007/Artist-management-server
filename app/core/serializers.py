@@ -91,16 +91,16 @@ class MusicSerializer(serializers.Serializer):
     genre = serializers.ChoiceField(choices=GENRE_CHOICES, required=False)
     artist_info = serializers.SerializerMethodField()
     created_by_id = serializers.PrimaryKeyRelatedField(
-        queryset=ArtistProfile.objects.all(),
         required=False,
         allow_null=True,
-        source='created_by'
+        source='created_by',
+        read_only=True
     )
     artist_id = serializers.PrimaryKeyRelatedField(
-        queryset=ArtistProfile.objects.all(),
         required=False,
         allow_null=True,
-        source='artist'
+        source='artist',
+        read_only=True
     )
 
     def get_artist_info(self, obj):

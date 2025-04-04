@@ -29,12 +29,16 @@ class IsMusicCreator(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        # Allow all safe methods (GET, HEAD, OPTIONS)
         if request.method in permissions.SAFE_METHODS:
             return True
 
+        # Check if the user is an authenticated artist
         if request.user.is_authenticated and request.user.role == "artist":
             try:
+                # Get the artist profile associated with the user
                 artist_profile = ArtistProfile.objects.get(user=request.user)
+                # Check if the artist created the music record
                 return obj.created_by == artist_profile
             except ArtistProfile.DoesNotExist:
                 return False
