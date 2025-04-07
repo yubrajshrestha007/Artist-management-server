@@ -188,9 +188,6 @@ def delete_raw_user_profile_queries(user_id, profile_id):
         return cursor.rowcount > 0
 
 
-import uuid
-from django.db import connection, IntegrityError
-from django.utils import timezone
 
 
 def get_all_raw_manager_profiles_queries():
@@ -302,6 +299,11 @@ def create_raw_manager_profile_queries(user_id, data):
             return False, {"error": "An error occurred during manager profile creation."}
 
 
+from django.db import IntegrityError, transaction
+from django.db import connection
+from django.utils import timezone
+from django.db.utils import Error as DbError
+
 def update_raw_manager_profile_queries(user_id, profile_id, data):
     """
     Updates an existing manager profile using raw SQL.
@@ -338,13 +340,24 @@ def update_raw_manager_profile_queries(user_id, profile_id, data):
             profile_id,
         )
         try:
-            cursor.execute(update_query, params)
-            return True, {}
+            with transaction.atomic():
+                cursor.execute(update_query, params)
+                if cursor.rowcount == 0:
+                    return False, {"error": "No profile found to update."}
+                return True, {}
         except IntegrityError as e:
-            return False, {"error": "An error occurred during manager profile update."}
+            # Check if the error is due to a unique constraint violation
+            if "unique constraint" in str(e).lower():
+                if "company_email" in str(e).lower():
+                    return False, {"company_email": ["This company email already exists."]}
+                else:
+                    return False, {"error": "A unique constraint was violated."}
+            else:
+                return False, {"error": "An integrity error occurred during manager profile update."}
+        except DbError as e:
+            return False, {"error": f"A database error occurred: {e}"}
         except Exception as e:
-            return False, {"error": "An error occurred during manager profile update."}
-
+            return False, {"error": f"An unexpected error occurred: {e}"}
 
 def delete_raw_manager_profile_queries(user_id, profile_id):
     """

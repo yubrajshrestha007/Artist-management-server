@@ -98,12 +98,16 @@ def update_raw_artist_profile_queries(artist_id, data):
         else:
             date_of_birth = None
 
-        manager = data.get("manager")
+        manager = data.get("manager_id_id")  # Corrected key name
         if manager:
             try:
                 ManagerProfile.objects.get(id=manager)
-            except (ManagerProfile.DoesNotExist, ValueError):
+            except ManagerProfile.DoesNotExist:
                 return False, {"error": "Manager does not exist."}
+            except ValueError:
+                return False, {"error": "Invalid manager ID format."}
+        else:
+            manager = None
 
         params = (
             data.get("name"),

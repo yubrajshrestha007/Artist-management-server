@@ -183,6 +183,9 @@ class AllManagerProfileListView(APIView):
 
     def get(self, request):
         profiles = get_all_raw_manager_profiles_queries()
+        # Add id to each profile dictionary
+        for profile in profiles:
+            profile['id'] = str(profile['id'])
         serializer = self.serializer_class(data=profiles, many=True)
         serializer.is_valid()
         return Response(serializer.data)
