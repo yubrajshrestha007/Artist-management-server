@@ -52,7 +52,7 @@ class ArtistProfileSerializer(serializers.Serializer):
     address = serializers.CharField(required=False, allow_blank=True)
     first_release_year = serializers.IntegerField(required=False, allow_null=True)
     no_of_albums_released = serializers.IntegerField(default=0)
-    manager_id = serializers.PrimaryKeyRelatedField(
+    manager_id_id = serializers.PrimaryKeyRelatedField(
         queryset=ManagerProfile.objects.all(),
         required=False,
         allow_null=True,

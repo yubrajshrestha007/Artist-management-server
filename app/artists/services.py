@@ -55,12 +55,9 @@ def create_raw_artist_profile_queries(user_id, data):
         else:
             date_of_birth = None
 
-        manager = data.get("manager")
-        if manager:
-            try:
-                ManagerProfile.objects.get(id=manager)
-            except (ManagerProfile.DoesNotExist, ValueError):
-                return False, {"error": "Manager does not exist."}
+        # Ensure user_id is a UUID object
+        manager_instance = data.get("manager")
+        manager_id_id= manager_instance.id if manager_instance else None
 
         params = (
             artist_id,
@@ -71,7 +68,7 @@ def create_raw_artist_profile_queries(user_id, data):
             data.get("address"),
             data.get("first_release_year"),
             data.get("no_of_albums_released"),
-            manager,
+            manager_id_id,
         )
         try:
             cursor.execute(insert_query, params)
@@ -86,6 +83,8 @@ def create_raw_artist_profile_queries(user_id, data):
 
 def update_raw_artist_profile_queries(artist_id, data):
     """Updates an existing artist profile using raw SQL."""
+    print(f"Updating artist profile with ID: {artist_id}")
+    print(f"Data to update: {data}")
     with connection.cursor() as cursor:
         update_query = f"""
             UPDATE {ArtistProfile._meta.db_table}
@@ -98,16 +97,8 @@ def update_raw_artist_profile_queries(artist_id, data):
         else:
             date_of_birth = None
 
-        manager = data.get("manager_id_id")  # Corrected key name
-        if manager:
-            try:
-                ManagerProfile.objects.get(id=manager)
-            except ManagerProfile.DoesNotExist:
-                return False, {"error": "Manager does not exist."}
-            except ValueError:
-                return False, {"error": "Invalid manager ID format."}
-        else:
-            manager = None
+        manager_instance = data.get("manager")
+        manager_id_id = manager_instance.id if manager_instance else None
 
         params = (
             data.get("name"),
@@ -116,7 +107,7 @@ def update_raw_artist_profile_queries(artist_id, data):
             data.get("address"),
             data.get("first_release_year"),
             data.get("no_of_albums_released"),
-            manager,
+            manager_id_id,
             artist_id,
         )
         try:
