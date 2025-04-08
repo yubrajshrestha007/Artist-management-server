@@ -66,8 +66,8 @@ class ArtistProfileNameSerializer(serializers.Serializer):
 
 class ManagerProfileSerializer(serializers.Serializer):
     """Serializer for manager profiles."""
-    id = serializers.UUIDField()
-    name = serializers.CharField(required=False, allow_blank=True)
+    id = serializers.UUIDField(required=False)
+    name = serializers.CharField(required=True, allow_blank=True)
     company_name = serializers.CharField(required=False, allow_blank=True)
     company_email = serializers.EmailField(required=False, allow_blank=True)  # Make email optional
     company_phone = serializers.CharField(required=False, allow_blank=True)  # Make phone optional

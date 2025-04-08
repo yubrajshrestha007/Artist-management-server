@@ -157,6 +157,10 @@ class ManagerProfileDetailView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):
+        print(request.data)
+        # print(request.user.id)
+        # print(pk)
+
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             success, data = update_raw_manager_profile_queries(

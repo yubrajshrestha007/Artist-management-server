@@ -11,7 +11,7 @@ def get_raw_music_list_queries():
     """Retrieves a list of music records using raw SQL."""
     with connection.cursor() as cursor:
         query = f"""
-            SELECT m.id, m.title, m.album_name, m.release_date, m.genre, a.id as artist_id, a.name as artist_name, m.created_by_id
+            SELECT m.id, m.title, m.album_name, m.release_date, m.genre,m.created, a.id as artist_id, a.name as artist_name, m.created_by_id
             FROM {Music._meta.db_table} m
             LEFT JOIN {ArtistProfile._meta.db_table} a ON m.created_by_id = a.id;
         """
@@ -25,7 +25,7 @@ def get_raw_music_detail_queries(music_id):
     """Retrieves a single music record by ID using raw SQL."""
     with connection.cursor() as cursor:
         query = f"""
-            SELECT m.id, m.title, m.album_name, m.release_date, m.genre, a.id as artist_id, a.name as artist_name, m.created_by_id
+            SELECT m.id, m.title, m.album_name, m.release_date, m.genre,m.created, a.id as artist_id, a.name as artist_name, m.created_by_id
             FROM {Music._meta.db_table} m
             LEFT JOIN {ArtistProfile._meta.db_table} a ON m.created_by_id = a.id
             WHERE m.id = %s;

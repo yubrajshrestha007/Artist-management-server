@@ -220,7 +220,7 @@ def get_raw_manager_profile_list_queries(user_id):
     """
     with connection.cursor() as cursor:
         query = """
-            SELECT id, name, company_name, company_email, company_phone, gender, date_of_birth, address
+            SELECT id, name, company_name, company_email, company_phone, gender, date_of_birth, address, created, modified
             FROM core_managerprofile
             WHERE user_id = %s;
         """
@@ -243,7 +243,7 @@ def get_raw_manager_profile_detail_queries(user_id, profile_id):
     """
     with connection.cursor() as cursor:
         query = """
-            SELECT id, name, company_name, company_email, company_phone, gender, date_of_birth, address
+            SELECT id, name, company_name, company_email, company_phone, gender, date_of_birth, address,created, modified
             FROM core_managerprofile
             WHERE user_id = %s AND id = %s;
         """
@@ -316,6 +316,8 @@ def update_raw_manager_profile_queries(user_id, profile_id, data):
     Returns:
         tuple: A tuple containing a boolean indicating success and a dictionary with error messages if any.
     """
+    print(f"Updating manager profile with ID: {profile_id}")
+    print(f"Data to update: {data}")
     with connection.cursor() as cursor:
         update_query = """
             UPDATE core_managerprofile
