@@ -137,9 +137,10 @@ def update_raw_user_queries(user_id, data):
             SET email = %s, is_staff = %s, is_active = %s, role = %s, modified = NOW()
             WHERE id = %s;
         """
+        staff = data.get("is_staff", False)
         params = (
             data.get("email"),
-            data.get("is_staff"),
+            staff,
             data.get("is_active"),
             data.get("role"),
             user_id,

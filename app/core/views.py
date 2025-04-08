@@ -24,6 +24,11 @@ class LoginView(APIView):
             user = get_raw_login_queries(email, password)
 
             if user is not None:
+                if not user.is_active:
+                    return Response(
+                        {"error": "User account is inactive."},
+                        status=status.HTTP_401_UNAUTHORIZED, # Or HTTP_403_FORBIDDEN
+                    )
                 request.user=user
                 access = generate_access_token(user)
                 refresh = generate_refresh_token(user)

@@ -13,7 +13,7 @@ class UserSerializer(serializers.Serializer):
     """Serializer for the User model."""
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField()
-    is_staff = serializers.BooleanField()
+    is_staff = serializers.BooleanField(required=False)
     is_active = serializers.BooleanField()
     date_joined = serializers.DateTimeField(read_only=True)
     role = serializers.ChoiceField(choices=ROLE_CHOICES)
