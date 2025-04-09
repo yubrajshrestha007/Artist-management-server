@@ -164,7 +164,7 @@ class ManagerProfileDetailView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             success, data = update_raw_manager_profile_queries(
-                request.user.id, pk, serializer.validated_data
+                pk, serializer.validated_data
             )
             if success:
                 return Response(data)

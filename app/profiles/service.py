@@ -304,7 +304,7 @@ from django.db import connection
 from django.utils import timezone
 from django.db.utils import Error as DbError
 
-def update_raw_manager_profile_queries(user_id, profile_id, data):
+def update_raw_manager_profile_queries(profile_id, data):
     """
     Updates an existing manager profile using raw SQL.
 
@@ -322,7 +322,7 @@ def update_raw_manager_profile_queries(user_id, profile_id, data):
         update_query = """
             UPDATE core_managerprofile
             SET name = %s, company_name = %s, company_email = %s, company_phone = %s, gender = %s, date_of_birth = %s, address = %s, modified = %s
-            WHERE user_id = %s AND id = %s;
+            WHERE id = %s;
         """
         date_of_birth = data.get("date_of_birth")
         if date_of_birth:
@@ -338,7 +338,6 @@ def update_raw_manager_profile_queries(user_id, profile_id, data):
             date_of_birth,
             data.get("address"),
             timezone.now(),
-            user_id,
             profile_id,
         )
         try:
